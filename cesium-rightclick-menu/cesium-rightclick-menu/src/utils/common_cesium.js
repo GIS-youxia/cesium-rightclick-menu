@@ -307,7 +307,7 @@ function addLabelText(entity, type = '', labelText) {
       fillColor: Cesium.Color.AQUA,
       heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      pixelOffset: new Cesium.Cartesian2(0,-15)
+      pixelOffset: new Cesium.Cartesian2(0,-35)
     }
   }
 }

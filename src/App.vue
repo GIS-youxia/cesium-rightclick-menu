@@ -1,25 +1,26 @@
 <template>
   <div id="app">
-    <common-map-comp></common-map-comp>
+    <cesium-rightclick-menu></cesium-rightclick-menu>
   </div>
 </template>
 
 <script>
-import commonMapComp from "@/components/RightClickMenu/CommonMapComp";
 export default {
   name: 'App',
   components: {
-    commonMapComp
   }
 }
 </script>
 
 <style>
+html, body {
+  margin: 0;
+  height: 100%;
+  font-size: unset;
+  overflow: hidden;
+  position: relative;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  height: 100%;
 }
 </style>

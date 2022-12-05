@@ -1,13 +1,13 @@
 <template>
   <div class="map__wrap">
-    <div id="map3d" style="width: 100%;height: 100%">
+    <div id="map3d" style="width: 100%;height: 100%;">
       <div id="slider" v-if="sliderShow"></div>
     </div>
     <div
-      class="alertMenu"
-      ref="alertMenu"
-      :style="alertMenuStyle"
-      v-show="alertMenuState"
+        class="alertMenu"
+        ref="alertMenu"
+        :style="alertMenuStyle"
+        v-show="alertMenuState"
     >
       <div class="level__one">
         <div v-for="(item, index) in menuList"
@@ -62,7 +62,7 @@
           <div class="content">
             确定删除？
           </div>
-          <div style="display: flex;justify-content: space-around">
+          <div style="display: flex;justify-content: space-around;">
             <div class="confirm_btn" @click="onCancel"><span>取消</span></div>
             <div class="confirm_btn" @click="onDelete"><span>确定</span></div>
           </div>
@@ -89,15 +89,17 @@ import {
   cartesian3ToXyz,
   getLabelObj,
   addLabelText
-} from "./utils/common_cesium";
-import {disPlayPositionCtrl} from "./utils/common_tools";
-import EntityDraw from "./lib/LabelPlotting/EntityDraw";
-import MeasureTools from "./utils/measure";
-import * as DTH from "./lib/DTH/DTH";
-import FcDialog from "./FcDialog";
+} from "./utils/common_cesium"
+import {disPlayPositionCtrl} from "./utils/common_tools"
+import EntityDraw from "./lib/LabelPlotting/EntityDraw"
+import MeasureTools from "./utils/measure"
+import * as DTH from "./lib/DTH/DTH"
+import FcDialog from "./FcDialog"
+
+let positionEntity = []
 
 export default {
-  name: "CommonMapComp",
+  name: "cesium-rightclick-menu",
   components: {
     FcDialog: FcDialog,
   },
@@ -113,8 +115,15 @@ export default {
     toCenter: {
       type: Function,
       default: function () {
-        return () => {
+        let pos = Cesium.Cartesian3.fromDegrees(107.966005, 30.364278, 17000000)//经纬度坐标转化为投影坐标
+        let flyToOpts = {
+          destination: {
+            x: pos.x,
+            y: pos.y,
+            z: pos.z
+          }
         }
+        window.viewer.scene.camera.setView(flyToOpts)
       }
     },
     load3dTiles: {
@@ -154,7 +163,11 @@ export default {
         {
           label: '查看坐标',
           icon: 'icon-chakanzuobiao',
-          handler: 'showClickedPosition'
+          // handler: 'showClickedPosition',
+          children: [
+            {label: '选点', icon: 'icon-ditu', handler: 'choosePos', isSwitch: true, active: false},
+            {label: '清除', icon: 'icon-shanchu', handler: 'clearPositions'}
+          ]
         },
         {
           label: '场景服务', icon: 'icon-changjingjuanlian',
@@ -226,7 +239,6 @@ export default {
       menu_level2Style: {},
       activeIndex: null,
       activeSubIndex: 0,
-      rightClickedPosition: null,
       sliderShow: false,
       splitHandler: null,
       earthAtRightLayer: null,
@@ -244,10 +256,10 @@ export default {
       highlightFace: null,
       delDialogShow: false,
       activeEntity: null,
-      dkInfoDialogShow: false,
-      propertiesObj: {},
-      videoPlane: null,
-      positionEntity: null
+      // dkInfoDialogShow: false,
+      // propertiesObj: {},
+      // videoPlane: null,
+      isChoosePos: false
     }
   },
 
@@ -284,7 +296,7 @@ export default {
           url: require('./imgs/img.png'),
         })
       }
-      // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY';
+      // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
       let viewer = new Cesium.Viewer('map3d', viewerOption)
       viewer._cesiumWidget._creditContainer.style.display = "none"// 隐藏版权
       viewer.scene.globe.depthTestAgainstTerrain = true
@@ -297,21 +309,21 @@ export default {
       })
 
       let earthAtLeft = viewer.imageryLayers.addImageryProvider(tms)
-      earthAtLeft.ImagerySplitDirection = Cesium.ImagerySplitDirection.LEFT;
+      earthAtLeft.ImagerySplitDirection = Cesium.ImagerySplitDirection.LEFT
       // 导航控件
-      // let pInfoStatusBar = new xt3d.SceneControl.PositionInfoStatusBar(viewer);
-      window.viewer = viewer;
+      // let pInfoStatusBar = new xt3d.SceneControl.PositionInfoStatusBar(viewer)
+      window.viewer = viewer
       this.toCenter && this.toCenter()
       this.loadRegion && this.loadRegion()
-      this.load3dTiles &&this.load3dTiles()
+      this.load3dTiles && this.load3dTiles()
     },
     initRightClick() {
       let handler = new Cesium.ScreenSpaceEventHandler(window.viewer.scene.canvas)
       let that = this
       handler.setInputAction(function (click) {
         that.activeIndex = null
-        // that.activeMenuList = []
-        that.rightClickedPosition = cartesian2ToXyz(click.position, window.viewer)
+        that.activeMenuList = []
+        // that.rightClickedPosition = cartesian2ToXyz(click.position, window.viewer)
         const pickedFeature = window.viewer.scene.pick(click.position)
 
         // 点击到了entity
@@ -320,11 +332,11 @@ export default {
             that.activeEntity = pickedFeature.id
             // 高亮显示
             if (that.highlightFace) {
-              that.highlightFace.material = that.highlightFace.material0;
+              that.highlightFace.material = that.highlightFace.material0
             }
-            pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material;
-            pickedFeature.id.polygon.material = Cesium.Color.AQUA.withAlpha(0.5);
-            that.highlightFace = pickedFeature.id.polygon;
+            pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material
+            pickedFeature.id.polygon.material = Cesium.Color.AQUA.withAlpha(0.5)
+            that.highlightFace = pickedFeature.id.polygon
 
             that.delDialogShow = true
           }
@@ -332,55 +344,60 @@ export default {
           // 获取右键点击时，菜单栏出现的位置
           if (!that.isEditing) {
             that.alertMenuStyle = disPlayPositionCtrl(
-              click.position.x, // 屏幕坐标x
-              click.position.y, // 屏幕坐标y
-              that.$refs.alertMenu.clientWidth, // 菜单栏宽度
-              that.$refs.alertMenu.clientHeight // 菜单栏高度
-            );
+                click.position.x, // 屏幕坐标x
+                click.position.y, // 屏幕坐标y
+                that.$refs.alertMenu.clientWidth, // 菜单栏宽度
+                that.$refs.alertMenu.clientHeight // 菜单栏高度
+            )
             // 显示右键菜单栏
-            that.showOrHiddenRightClickMenu(true);
+            that.showOrHiddenRightClickMenu(true)
           }
         }
-      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+      }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
     },
     initLeftClick() {
-      let handler = new Cesium.ScreenSpaceEventHandler(window.viewer.scene.canvas);
+      let handler = new Cesium.ScreenSpaceEventHandler(window.viewer.scene.canvas)
       handler.setInputAction((click) => {
-        const pickedFeature = window.viewer.scene.pick(click.position);
-        this.showOrHiddenRightClickMenu(false);
-        // 取消高亮
-        if (this.highlightFace) {
-          this.highlightFace.material = this.highlightFace.material0;
+        const pickedFeature = window.viewer.scene.pick(click.position)
+        if (this.isChoosePos) {
+          let position = cartesian2ToXyz(click.position, window.viewer)
+          this.showClickedPosition(position)
+        } else {
+          this.showOrHiddenRightClickMenu(false)
+          // 取消高亮
+          if (this.highlightFace) {
+            this.highlightFace.material = this.highlightFace.material0
+          }
+
+          //显示图层信息
+          if (pickedFeature && pickedFeature.id && pickedFeature.id.canShow) {
+            this.activeEntity = pickedFeature.id
+            pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material
+            pickedFeature.id.polygon.material = Cesium.Color.AQUA
+            this.highlightFace = pickedFeature.id.polygon
+            // this.showDkInfo && this.showDkInfos()
+          }
         }
-
-        //显示图层信息
-        if (pickedFeature && pickedFeature.id && pickedFeature.id.canShow) {
-          this.activeEntity = pickedFeature.id
-          pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material;
-          pickedFeature.id.polygon.material = Cesium.Color.AQUA;
-          this.highlightFace = pickedFeature.id.polygon;
-          this.showDkInfo && this.showDkInfos()
-        }
-      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     },
 
-    showDkInfos() {
-      this.dkInfoDialogShow = true
-      let entity = this.activeEntity
-      this.propertiesObj = entity.propertiesObj
-    },
+    // showDkInfos() {
+    //   this.dkInfoDialogShow = true
+    //   let entity = this.activeEntity
+    //   this.propertiesObj = entity.propertiesObj
+    // },
 
-    changeActiveEntityColor(args) {
-      let color = getColor(args[0])
-      this.activeEntity.polygon.material = Cesium.Color.fromCssColorString(color)
-      this.activeEntity.label = getLabelObj(args[1])
-    },
-    handleDkInfoClose() {
-      this.dkInfoDialogShow = false
-      if (this.highlightFace) {
-        this.highlightFace.material = this.highlightFace.material0;
-      }
-    },
+    // changeActiveEntityColor(args) {
+    //   let color = getColor(args[0])
+    //   this.activeEntity.polygon.material = Cesium.Color.fromCssColorString(color)
+    //   this.activeEntity.label = getLabelObj(args[1])
+    // },
+    // handleDkInfoClose() {
+    //   this.dkInfoDialogShow = false
+    //   if (this.highlightFace) {
+    //     this.highlightFace.material = this.highlightFace.material0
+    //   }
+    // },
     onCancel() {
       this.delDialogShow = false
     },
@@ -390,7 +407,7 @@ export default {
       this.delDialogShow = false
     },
     showOrHiddenRightClickMenu(state) {
-      this.alertMenuState = state;
+      this.alertMenuState = state
     },
     handleHover(index) {
       this.activeIndex = index
@@ -415,18 +432,29 @@ export default {
 
       this.showOrHiddenRightClickMenu(false)
     },
-    showClickedPosition() {
-      window.viewer.entities.remove(this.positionEntity)
-      this.positionEntity = new Cesium.Entity({
-        position: Cesium.Cartesian3.fromDegrees(this.rightClickedPosition.lng, this.rightClickedPosition.lat),
-        point: {
-          color: Cesium.Color.RED,
-          pixelSize: 8,
-        }
+    showClickedPosition(position) {
+      let et = new Cesium.Entity({
+        position: Cesium.Cartesian3.fromDegrees(position.lng, position.lat),
+        billboard: {
+          image: "static/img/locate.png",
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM//贴地属性
+        },
       })
-      window.viewer.entities.add(this.positionEntity)
-      let str = this.rightClickedPosition.lng + ',' + this.rightClickedPosition.lat
-      addLabelText(this.positionEntity, 'Point', str)
+      window.viewer.entities.add(et)
+
+      let str = position.lng + ',' + position.lat
+      addLabelText(et, 'Point', str)
+      positionEntity.push(et)
+    },
+    choosePos() {
+      this.isChoosePos = !this.isChoosePos
+    },
+    clearPositions() {
+      if (positionEntity.length) {
+        positionEntity.forEach(item => {
+          window.viewer.entities.remove(item)
+        })
+      }
     },
     sceneToFile() {
       sceneToFile(window.viewer)
@@ -436,7 +464,7 @@ export default {
         url: "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
         minimumLevel: 1,
         maximumLevel: 18,
-      });
+      })
       if (this.sliderShow) {
         this.splitHandler.destroy()
         this.splitHandler = null
@@ -449,52 +477,52 @@ export default {
           //   url: "Cesium.buildModuleUrl('http://120.27.230.6/tdt_yx') + '/{z}/{x}/{reverseY}.jpg'",
           //   minimumLevel: 1,
           //   maximumLevel: 18,
-          // });
-          const layers = window.viewer.imageryLayers;
-          const earthAtRight = layers.addImageryProvider(layer1);
+          // })
+          const layers = window.viewer.imageryLayers
+          const earthAtRight = layers.addImageryProvider(layer1)
           this.earthAtRightLayer = earthAtRight
-          // const earthAtLeft = layers.addImageryProvider(layer2);
-          // earthAtLeft.splitDirection = Cesium.ImagerySplitDirection.LEFT;
-          earthAtRight.splitDirection = Cesium.ImagerySplitDirection.RIGHT;
+          // const earthAtLeft = layers.addImageryProvider(layer2)
+          // earthAtLeft.splitDirection = Cesium.ImagerySplitDirection.LEFT
+          earthAtRight.splitDirection = Cesium.ImagerySplitDirection.RIGHT
 
-          const slider = document.getElementById("slider");
+          const slider = document.getElementById("slider")
           if (slider) {
             window.viewer.scene.imagerySplitPosition =
-              slider.offsetLeft / slider.parentElement.offsetWidth;
+                slider.offsetLeft / slider.parentElement.offsetWidth
 
-            const handler = new Cesium.ScreenSpaceEventHandler(slider);
+            const handler = new Cesium.ScreenSpaceEventHandler(slider)
             this.splitHandler = handler
 
-            let moveActive = false;
+            let moveActive = false
 
             function move(movement) {
               if (!moveActive) {
-                return;
+                return
               }
 
-              const relativeOffset = movement.endPosition.x;
+              const relativeOffset = movement.endPosition.x
               const splitPosition =
-                (slider.offsetLeft + relativeOffset) /
-                slider.parentElement.offsetWidth;
-              slider.style.left = `${100.0 * splitPosition}%`;
-              window.viewer.scene.imagerySplitPosition = splitPosition;
+                  (slider.offsetLeft + relativeOffset) /
+                  slider.parentElement.offsetWidth
+              slider.style.left = `${100.0 * splitPosition}%`
+              window.viewer.scene.imagerySplitPosition = splitPosition
             }
 
             handler.setInputAction(function () {
-              moveActive = true;
-            }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+              moveActive = true
+            }, Cesium.ScreenSpaceEventType.LEFT_DOWN)
             handler.setInputAction(function () {
-              moveActive = true;
-            }, Cesium.ScreenSpaceEventType.PINCH_START);
+              moveActive = true
+            }, Cesium.ScreenSpaceEventType.PINCH_START)
 
-            handler.setInputAction(move, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-            handler.setInputAction(move, Cesium.ScreenSpaceEventType.PINCH_MOVE);
+            handler.setInputAction(move, Cesium.ScreenSpaceEventType.MOUSE_MOVE)
+            handler.setInputAction(move, Cesium.ScreenSpaceEventType.PINCH_MOVE)
 
             handler.setInputAction(function () {
-              moveActive = false;
-            }, Cesium.ScreenSpaceEventType.LEFT_UP);
+              moveActive = false
+            }, Cesium.ScreenSpaceEventType.LEFT_UP)
             handler.setInputAction(function () {
-              moveActive = false;
+              moveActive = false
             }, Cesium.ScreenSpaceEventType.PINCH_END)
           }
         })
@@ -509,11 +537,11 @@ export default {
         window.viewer.entities.remove(et)
       } else {
         this.isEditing = true
-        this.terrainExcavate = new xt3d.ExcavateAnalysis.TerrainExcavate(window.viewer);
+        this.terrainExcavate = new xt3d.ExcavateAnalysis.TerrainExcavate(window.viewer)
         this.initEntityDraw()
         this.drawActivate('Polygon')
         this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
-          result.remove();
+          result.remove()
           addLabelText(result, 'Polygon', '开挖测试')
           this.$prompt('请输入大于0的数字', '开挖深度', {
             confirmButtonText: '确定',
@@ -607,7 +635,7 @@ export default {
             id: 'romaLine',
             polyline: {
               positions: new Cesium.CallbackProperty(e => {
-                return positions;
+                return positions
               }, false),
               width: 3,
               material: new Cesium.PolylineOutlineMaterialProperty({
@@ -641,10 +669,10 @@ export default {
           title: '提示',
           dangerouslyUseHTMLString: true,
           message: '点击左键选择起点，使用' +
-            '<span style="color: darkcyan">W</span>（前进）' +
-            '<span style="color: darkcyan">A</span>（左转）' +
-            '<span style="color: darkcyan">S</span>（后退）' +
-            '<span style="color: darkcyan">D</span>（右转）进行控制',
+              '<span style="color: darkcyan">W</span>（前进）' +
+              '<span style="color: darkcyan">A</span>（左转）' +
+              '<span style="color: darkcyan">S</span>（后退）' +
+              '<span style="color: darkcyan">D</span>（右转）进行控制',
           duration: 0
         })
         this.initEntityDraw()
@@ -668,15 +696,15 @@ export default {
     initTerrain() {
       //线下高程
       if (window.viewer.terrainProvider._scheme) {
-        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider({});
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider({})
       } else {
         window.viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
           url: "http://120.27.230.6/yhterrain",
-        });
+        })
       }
     },
     valueChange() {
-      this.limitHeight && this.limitHeight.setHeight(this.height);
+      this.limitHeight && this.limitHeight.setHeight(this.height)
     },
     initLimitHeight() {
       if (this.limitHeight) {
@@ -688,7 +716,7 @@ export default {
         this.initEntityDraw()
         this.drawActivate('Polygon')
         this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
-          result.remove();
+          result.remove()
           let arr = []
           positions.forEach(item => {
             let obj = cartesian3ToXyz(item, window.viewer)
@@ -696,7 +724,7 @@ export default {
             arr.push(obj.lat)
           })
           this.limitHeightShow = true
-          this.limitHeight = new xt3d.SpatialAnalysis.LimitHeight(window.viewer, arr, 30);
+          this.limitHeight = new xt3d.SpatialAnalysis.LimitHeight(window.viewer, arr, 30)
           this.isEditing = false
         })
         this.entityDraw.CancelEvent.addEventListener(() => {
@@ -716,7 +744,7 @@ export default {
         this.initEntityDraw()
         this.drawActivate('Polygon')
         this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
-          result.remove();
+          result.remove()
           this.$prompt('请输入大于0的数字', '淹没深度', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
@@ -742,7 +770,7 @@ export default {
       var currentHeight = 1
       var maxHeight = value
       var times = 2
-      var speed = (maxHeight - currentHeight) / times;
+      var speed = (maxHeight - currentHeight) / times
       let entity = window.viewer.entities.add({
         id: "floodEntity",
         polygon: {
@@ -758,17 +786,17 @@ export default {
           //一个属性，其值由回调函数延迟评估。time, result
           extrudedHeight: 0,
         },
-      });
+      })
       //设置高度随时间变化
       var setFlood = setInterval(() => {
         if (currentHeight < maxHeight) {
-          currentHeight += speed / 30;
+          currentHeight += speed / 30
           entity.polygon.extrudedHeight = new Cesium.CallbackProperty(function (time, result) {
-            return currentHeight;
-          }, false);
+            return currentHeight
+          }, false)
           if (currentHeight > maxHeight) {
-            currentHeight = maxHeight;
-            clearInterval(setFlood);
+            currentHeight = maxHeight
+            clearInterval(setFlood)
           }
         }
       }, 1000 / 30)
@@ -804,10 +832,10 @@ export default {
             },
           })
         })
-      });
-      this.tileset1 = window.viewer.scene.primitives.add(waterPrimitive);
-      // waterPrimitive.update();
-      // var sui = waterPrimitive.getGeometryInstanceAttributes('floodGeoInstance');
+      })
+      this.tileset1 = window.viewer.scene.primitives.add(waterPrimitive)
+      // waterPrimitive.update()
+      // var sui = waterPrimitive.getGeometryInstanceAttributes('floodGeoInstance')
     },
 
     initMeasure() {
@@ -844,14 +872,14 @@ export default {
 
     // 添加标记
     initMarkerTool() {
-      this.militaryPlotLayer = new xt3d.LabelPlotting.MilitaryPlot.PlotLayer(window.viewer);
-      this.militaryPlotLayer.setPlotSelectable(true);
-      this.plotDraw = new xt3d.LabelPlotting.MilitaryPlot.PlotDraw(window.viewer);
+      this.militaryPlotLayer = new xt3d.LabelPlotting.MilitaryPlot.PlotLayer(window.viewer)
+      this.militaryPlotLayer.setPlotSelectable(true)
+      this.plotDraw = new xt3d.LabelPlotting.MilitaryPlot.PlotDraw(window.viewer)
       this.plotDraw.PlotDrawEndEvent.addEventListener((drawPlot, plotType) => {
-        drawPlot.remove();
+        drawPlot.remove()
         this.isEditing = false
-        this.militaryPlotLayer.addPlot(drawPlot.toGeoJson());
-      });
+        this.militaryPlotLayer.addPlot(drawPlot.toGeoJson())
+      })
     },
     addMarkerPoint() {
       this.isEditing = true
@@ -868,7 +896,7 @@ export default {
         }).catch(() => {
           window.viewer.entities.remove(result)
           this.isEditing = false
-        });
+        })
       })
       this.entityDraw.CancelEvent.addEventListener(() => {
         this.isEditing = false
@@ -889,7 +917,7 @@ export default {
         }).catch(() => {
           window.viewer.entities.remove(result)
           this.isEditing = false
-        });
+        })
       })
       this.entityDraw.CancelEvent.addEventListener(() => {
         this.isEditing = false
@@ -911,7 +939,7 @@ export default {
           // result.remove() 不起作用
           window.viewer.entities.remove(result)
           this.isEditing = false
-        });
+        })
       })
       this.entityDraw.CancelEvent.addEventListener(() => {
         this.isEditing = false
@@ -934,7 +962,7 @@ export default {
           // result.remove() 不起作用
           window.viewer.entities.remove(result)
           this.isEditing = false
-        });
+        })
       })
       this.entityDraw.CancelEvent.addEventListener(() => {
         this.isEditing = false
@@ -955,7 +983,7 @@ export default {
         }).catch(() => {
           window.viewer.entities.remove(result)
           this.isEditing = false
-        });
+        })
       })
       this.entityDraw.CancelEvent.addEventListener(() => {
         this.isEditing = false
@@ -967,7 +995,7 @@ export default {
         let et = window.viewer.entities.getById('Polygon_Label')
         window.viewer.entities.remove(et)
       })
-      this.militaryPlotLayer.clear();
+      this.militaryPlotLayer.clear()
     },
 
     // 图层效果
@@ -976,8 +1004,8 @@ export default {
         this.weatherEffect1.removeEffect()
         this.weatherEffect1 = null
       } else {
-        this.weatherEffect1 = new xt3d.SceneDominate.WeatherEffect(window.viewer);
-        this.weatherEffect1.addRainEffect();
+        this.weatherEffect1 = new xt3d.SceneDominate.WeatherEffect(window.viewer)
+        this.weatherEffect1.addRainEffect()
       }
     },
     startSnow() {
@@ -985,8 +1013,8 @@ export default {
         this.weatherEffect2.removeEffect()
         this.weatherEffect2 = null
       } else {
-        this.weatherEffect2 = new xt3d.SceneDominate.WeatherEffect(window.viewer);
-        this.weatherEffect2.addSnowEffect();
+        this.weatherEffect2 = new xt3d.SceneDominate.WeatherEffect(window.viewer)
+        this.weatherEffect2.addSnowEffect()
       }
     },
     startFog() {
@@ -994,8 +1022,8 @@ export default {
         this.weatherEffect3.removeEffect()
         this.weatherEffect3 = null
       } else {
-        this.weatherEffect3 = new xt3d.SceneDominate.WeatherEffect(window.viewer);
-        this.weatherEffect3.addFogEffect();
+        this.weatherEffect3 = new xt3d.SceneDominate.WeatherEffect(window.viewer)
+        this.weatherEffect3.addFogEffect()
       }
     },
 
@@ -1004,7 +1032,7 @@ export default {
         this.nightVisionEffect.enabled = false
         this.nightVisionEffect = null
       } else {
-        this.nightVisionEffect = new xt3d.SceneDominate.NightVisionEffect(window.viewer);
+        this.nightVisionEffect = new xt3d.SceneDominate.NightVisionEffect(window.viewer)
         this.nightVisionEffect.enabled = true
       }
     },
@@ -1020,28 +1048,28 @@ export default {
 
     //初始化绘制
     initEntityDraw() {
-      this.entityDraw = new EntityDraw(window.viewer);
+      this.entityDraw = new EntityDraw(window.viewer)
     },
     //激活绘制
     drawActivate(type) {
-      this.entityDraw.activate(type);
-      // this.terrainExcavate.clear();
+      this.entityDraw.activate(type)
+      // this.terrainExcavate.clear()
     },
     initDthFd() {
       // 按栋进行单体化
       this.fdDTH = new DTH.Fd(window.viewer, {
         fdDataServerBaseUrl: "http://120.27.230.6:8080/geoserver/py/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=py%3Axssq&maxFeatures=5000&outputFormat=application%2Fjson"
-      });
+      })
 
       this.fdDTH.BuildingSelectedEvent.addEventListener((properties, position, type, fid, isDelete = false) => {
         // TODO 分栋完成后的操作
       })
-      this.fdDTH.activate();
+      this.fdDTH.activate()
     },
     initDthFc() {
       let fcDTH = new DTH.Fc(window.viewer, {
         fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=5000&outputFormat=application%2Fjson"
-      });
+      })
       fcDTH.FloorSelectedEvent.addEventListener((feature) => {
         if (feature) {
           this.properties = feature.properties
@@ -1050,14 +1078,14 @@ export default {
         }
       })
 
-      fcDTH.activate();
+      fcDTH.activate()
     },
     initDthFh() {
       let fhDTH = new DTH.Fh(window.viewer, {
         fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=50&outputFormat=application%2Fjson",
         //geoserver数据服务的地址 分户数据地址 分层数据中的楼栋编号和分户数据中的楼编号一致
         fhDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afh_offset&maxFeatures=50&outputFormat=application%2Fjson"
-      });
+      })
       fhDTH.HouseSelectedEvent.addEventListener((feature) => {
         if (feature) {
           this.properties = feature.properties
@@ -1066,10 +1094,10 @@ export default {
         }
       })
 
-      fhDTH.activate();
+      fhDTH.activate()
     },
     addVideo() {
-      let position = Cesium.Cartesian3.fromDegrees(120.3008555978398, 30.406375251999187, 10);
+      let position = Cesium.Cartesian3.fromDegrees(120.3008555978398, 30.406375251999187, 10)
       let et = window.viewer.entities.add({
         position: position,
         point: {
@@ -1085,7 +1113,7 @@ export default {
       let synchronizer = new Cesium.VideoSynchronizer({
         clock: viewer.clock,
         element: videoElement
-      });
+      })
       window.viewer.clock.shouldAnimate = true
       videoElement.style.display = 'none'
       this.videoPlane = new xt3d.VideoPlugin.VideoPlane(window.viewer, position, {
@@ -1110,14 +1138,18 @@ export default {
   mounted() {
     this.$nextTick(() => {
       // 禁用右键
-      document.oncontextmenu = new Function("event.returnValue=false");
+      document.oncontextmenu = new Function("event.returnValue=false")
       // 禁用选择
-      document.onselectstart = new Function("event.returnValue=false");
+      document.onselectstart = new Function("event.returnValue=false")
+
+      document.onclick = () => {
+        this.alertMenuState = false
+      }
 
       //由调用者提供需要加载的方法
       this.$on('spontaneousCall', (e) => {
         this.spontaneousCall(e)
-      });
+      })
     })
     this.initMap()
     this.initRightClick()
@@ -1126,9 +1158,9 @@ export default {
     this.initMarkerTool()
   },
   beforeDestroy() {
-    window.viewer.entities.removeAll();
-    window.viewer.imageryLayers.removeAll(true);
-    window.viewer.destroy();
+    window.viewer.entities.removeAll()
+    window.viewer.imageryLayers.removeAll(true)
+    window.viewer.destroy()
   }
 }
 </script>
