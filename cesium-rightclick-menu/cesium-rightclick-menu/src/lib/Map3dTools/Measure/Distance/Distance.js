@@ -105,7 +105,7 @@ export default class MeasureDistance {
       position: this.positions[0],
       type: "MeasureDistanceVertex",
       billboard: {
-        image: "static/img/start.png",
+        image: "http://120.27.230.6/tjch/cesium/resource/img/start.png",
         scaleByDistance: new Cesium.NearFarScalar(300, 1, 1200, 0.4), //设置随图缩放距离和比例
         distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 10000), //设置可见距离 10000米可见
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM
@@ -142,7 +142,7 @@ export default class MeasureDistance {
         eyeOffset: new Cesium.Cartesian3(0, 0, -10)
       },
       billboard: {
-        image: "static/img/end.png",
+        image: "http://120.27.230.6/tjch/cesium/resource/img/end.png",
         scaleByDistance: new Cesium.NearFarScalar(300, 1, 1200, 0.4), //设置随图缩放距离和比例
         distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 10000), //设置可见距离 10000米可见
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM

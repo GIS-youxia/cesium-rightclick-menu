@@ -1,16 +1,5 @@
-# 忽略目录
-src
-cesium-rightclick-menu
-node_modules
-public
-utils
-# 忽略指定文件
-vue.config.js
-babel.config.js
-*.map
-jsconfig.json
-
 .DS_Store
+node_modules
 /dist
 
 
@@ -33,3 +22,11 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+
+src/
+cesium-rightclick-menu/
+public/
+vue.config.js
+babel.config.js
+*.map
+*.html

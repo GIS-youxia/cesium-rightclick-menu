@@ -292,11 +292,11 @@ export default {
           }
         },
         // 提供一个默认图片避免加载cesiumendpoint接口
-        imageryProvider: new Cesium.SingleTileImageryProvider({
-          url: require('./imgs/img.png'),
-        })
+        // imageryProvider: new Cesium.SingleTileImageryProvider({
+        //   url: require('./imgs/img.png'),
+        // })
       }
-      // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
       let viewer = new Cesium.Viewer('map3d', viewerOption)
       viewer._cesiumWidget._creditContainer.style.display = "none"// 隐藏版权
       viewer.scene.globe.depthTestAgainstTerrain = true
@@ -436,7 +436,7 @@ export default {
       let et = new Cesium.Entity({
         position: Cesium.Cartesian3.fromDegrees(position.lng, position.lat),
         billboard: {
-          image: "static/img/locate.png",
+          image: "http://120.27.230.6/tjch/cesium/resource/img/locate.png",
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM//贴地属性
         },
       })
@@ -551,8 +551,8 @@ export default {
           }).then(({value}) => {
             this.terrainExcavate.add(positions, {
               excavateDepth: value,
-              bottomImage: require('./imgs/kaiwa_bottom.png'),
-              sideImage: require('./imgs/kaiwa_side.png')
+              bottomImage: 'http://120.27.230.6/tjch/cesium/resource/img/kaiwa_bottom.png',
+              sideImage: 'http://120.27.230.6/tjch/cesium/resource/img/kaiwa_side.png'
             })
             this.isEditing = false
           }).catch(() => {
@@ -650,7 +650,7 @@ export default {
           //创建漫游对象
           this.roamObj = new xt3d.TrackRoam.Roam(window.viewer, positions, {
             speed: 10,
-            modelUrl: 'static/img/CesiumMilkTruck.glb',
+            modelUrl: 'http://120.27.230.6/tjch/cesium/resource/img/CesiumMilkTruck.glb',
             scale: 1, // 大小
             role: 2
           })
@@ -681,7 +681,7 @@ export default {
           note.close()
           result.remove()
           this.keyboardModel = new xt3d.KeyboardDominate.KeyboardModelExt(window.viewer, positions[0], {
-            modelUrl: "static/img/CesiumMilkTruck.glb",
+            modelUrl: "http://120.27.230.6/tjch/cesium/resource/img/CesiumMilkTruck.glb",
             scale: 1,
             minimumPixelSize: 20,
             angle: 1, //转弯角度大小 越大转得越快
@@ -823,7 +823,7 @@ export default {
               type: 'Water',
               uniforms: {
                 // blendColor: new Cesium.Color(0, 0, 1, 0.3),
-                normalMap: Cesium.buildModuleUrl('static/img/flood.png'),
+                normalMap: Cesium.buildModuleUrl('http://120.27.230.6/tjch/cesium/resource/img/flood.png'),
                 //频率速度设置
                 frequency: 10000,
                 animationSpeed: 0.01,

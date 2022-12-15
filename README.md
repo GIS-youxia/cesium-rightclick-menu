@@ -1,4 +1,7 @@
-项目地址
+## About
+[Github地址](https://github.com/Weiwong1996/cesium-rightclick-menu.git)
+
+<strong>Contact me on WeChat：<span style="color:aqua">_weiwong</span></strong>
 
 ## 功能说明
 

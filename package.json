@@ -1,11 +1,19 @@
 {
   "name": "cesium-rightclick-menu",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "private": false,
   "description": "cesium地图右键弹出功能菜单",
   "main": "lib/landscape-components.umd.min.js",
-  "keywords": ["cesium", "rightclick menu", "cesium tools"],
-  "author": { "name": "wangwei" },
+  "license": "MIT",
+  "keywords": [
+    "cesium",
+    "rightclick menu",
+    "cesium tools",
+    "单体化"
+  ],
+  "author": {
+    "name": "wangwei"
+  },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -13,11 +21,12 @@
     "lib": "vue-cli-service build --target lib --name landscape-components --dest lib cesium-rightclick-menu/index.js"
   },
   "dependencies": {
+    "cesium": "^1.100.0",
     "core-js": "^3.8.3",
-    "vue": "^2.6.14",
     "element-ui": "^2.15.10",
     "less": "^4.1.2",
-    "less-loader": "^4.1.0"
+    "less-loader": "^4.1.0",
+    "vue": "^2.6.14"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

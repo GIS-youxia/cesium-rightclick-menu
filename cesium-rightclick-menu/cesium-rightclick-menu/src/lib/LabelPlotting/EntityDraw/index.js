@@ -120,7 +120,7 @@ export default class EntityDraw {
             //   color: Cesium.Color.RED
             // },
             billboard: {
-                image: "static/img/locate.png", verticalOrigin: Cesium.VerticalOrigin.BOTTOM//贴地属性
+                image: "http://120.27.230.6/tjch/cesium/resource/img/locate.png", verticalOrigin: Cesium.VerticalOrigin.BOTTOM//贴地属性
             },
         })
     }
