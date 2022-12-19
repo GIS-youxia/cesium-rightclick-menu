@@ -95,9 +95,12 @@ import EntityDraw from "./lib/LabelPlotting/EntityDraw"
 import MeasureTools from "./utils/measure"
 import * as DTH from "./lib/DTH/DTH"
 import FcDialog from "./FcDialog"
+import {getCatesian3FromPX, showRes} from "./lib/LJFX";
 
 let positionEntity = []
-
+let isClickAgain = false;
+let start = null;
+let end = null;
 export default {
   name: "cesium-rightclick-menu",
   components: {
@@ -364,6 +367,37 @@ export default {
           this.showClickedPosition(position)
         } else {
           this.showOrHiddenRightClickMenu(false)
+
+          const cartesian = getCatesian3FromPX(click.position, window.viewer);
+          if (!isClickAgain) {
+            isClickAgain = true;
+            start = window.viewer.entities.add({
+              name: "图标点",
+              position: cartesian,
+              billboard: {
+                image: 'http://120.27.230.6/tjch/cesium/resource/img/locate.png',
+                scale: 1,
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+              }
+            });
+            return;
+          }
+          if (isClickAgain) {
+            end = window.viewer.entities.add({
+              name: "图标点",
+              position: cartesian,
+              billboard: {
+                image: 'http://120.27.230.6/tjch/cesium/resource/img/locate.png',
+                scale: 1,
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+              }
+            });
+            console.log(start.position.getValue(), 'start.position.getValue()');
+            showRes(start.position.getValue(), end.position.getValue());
+          }
+
           // 取消高亮
           if (this.highlightFace) {
             this.highlightFace.material = this.highlightFace.material0

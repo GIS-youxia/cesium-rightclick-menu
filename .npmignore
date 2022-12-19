@@ -27,6 +27,7 @@ src/
 cesium-rightclick-menu/
 public/
 vue.config.js
+jsconfig.json
 babel.config.js
 *.map
 *.html
