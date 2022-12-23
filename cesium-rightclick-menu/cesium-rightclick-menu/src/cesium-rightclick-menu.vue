@@ -87,7 +87,6 @@ import {
   cartesian2ToXyz,
   sceneToFile,
   cartesian3ToXyz,
-  getLabelObj,
   addLabelText
 } from "./utils/common_cesium"
 import {disPlayPositionCtrl} from "./utils/common_tools"
@@ -95,12 +94,14 @@ import EntityDraw from "./lib/LabelPlotting/EntityDraw"
 import MeasureTools from "./utils/measure"
 import * as DTH from "./lib/DTH/DTH"
 import FcDialog from "./FcDialog"
-import {getCatesian3FromPX, showRes} from "./lib/LJFX";
+import searchRoute from "./lib/LJFX"
+import {
+  initPolylineBuffer,
+  initPointBuffer,
+  initPolygonBuffer
+} from "./lib/Buffer"
 
 let positionEntity = []
-let isClickAgain = false;
-let start = null;
-let end = null;
 export default {
   name: "cesium-rightclick-menu",
   components: {
@@ -204,6 +205,20 @@ export default {
               label: '淹没分析',
               icon: 'icon-yanmeiguocheng',
               handler: 'initFloodAnalysis',
+              isSwitch: true,
+              active: false
+            },
+            {
+              label: '最短路径分析',
+              icon: 'icon-yanmeiguocheng',
+              handler: 'initRouteAnalysis',
+              isSwitch: true,
+              active: false
+            },
+            {
+              label: '缓冲区分析',
+              icon: 'icon-yanmeiguocheng',
+              handler: 'initBufferAnalysis',
               isSwitch: true,
               active: false
             }
@@ -367,37 +382,6 @@ export default {
           this.showClickedPosition(position)
         } else {
           this.showOrHiddenRightClickMenu(false)
-
-          const cartesian = getCatesian3FromPX(click.position, window.viewer);
-          if (!isClickAgain) {
-            isClickAgain = true;
-            start = window.viewer.entities.add({
-              name: "图标点",
-              position: cartesian,
-              billboard: {
-                image: 'http://120.27.230.6/tjch/cesium/resource/img/locate.png',
-                scale: 1,
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-              }
-            });
-            return;
-          }
-          if (isClickAgain) {
-            end = window.viewer.entities.add({
-              name: "图标点",
-              position: cartesian,
-              billboard: {
-                image: 'http://120.27.230.6/tjch/cesium/resource/img/locate.png',
-                scale: 1,
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM
-              }
-            });
-            console.log(start.position.getValue(), 'start.position.getValue()');
-            showRes(start.position.getValue(), end.position.getValue());
-          }
-
           // 取消高亮
           if (this.highlightFace) {
             this.highlightFace.material = this.highlightFace.material0
@@ -835,6 +819,27 @@ export default {
         }
       }, 1000 / 30)
     },
+    initRouteAnalysis() {
+      if (this.routeAnalysis) {
+        this.routeAnalysis.remove()
+        this.routeAnalysis = null
+      } else {
+
+        this.$notify({
+          title: '提示',
+          dangerouslyUseHTMLString: true,
+          message: '依次点击左键，选择' +
+              '<span style="color: darkcyan">起点</span>和' +
+              '<span style="color: darkcyan">终点</span>',
+          duration: 0
+        })
+
+        this.routeAnalysis = new searchRoute(window.viewer)
+      }
+    },
+    initBufferAnalysis() {
+      initPointBuffer()
+    },
     createPolygon(points) {
       //primitive方式创建.可以制作出水波纹效果。adapCoordi
       let waterPrimitive = new Cesium.Primitive({
@@ -1242,7 +1247,8 @@ export default {
       border: 1px solid rgba(53, 123, 181, 0.6);
       background: #081A26;
       margin-left: 2px;
-      width: 40%;
+      //width: 40%;
+      min-width: 40%;
       display: flex;
       align-self: baseline;
       flex-direction: column;
@@ -1253,6 +1259,7 @@ export default {
 
       .level__two__item {
         padding: 5px 0;
+        margin: 0 10px;
         width: 100%;
         display: flex;
         align-items: center;
