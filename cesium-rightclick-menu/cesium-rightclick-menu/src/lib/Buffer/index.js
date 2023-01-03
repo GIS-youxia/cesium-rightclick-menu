@@ -1,10 +1,13 @@
 //初始化点缓冲
-export function initPointBuffer() {
-    let point = [106.422638966289, 29.5698367125623];
+import {cartesian3ToXyz} from "../../utils/common_cesium";
+import {clear} from "core-js/internals/task";
+let allBuffer = []
+export function initPointBuffer(p, value) {
+    let point = [p.lng, p.lat];
     addPoint(point);
 
     let pointF = turf.point(point);
-    let buffered = turf.buffer(pointF, 60, {units: 'meters'});
+    let buffered = turf.buffer(pointF, Number(value), {units: 'meters'});
     let coordinates = buffered.geometry.coordinates;
     let points = coordinates[0];
     let degreesArray = pointsToDegreesArray(points);
@@ -20,24 +23,26 @@ function addPoint(point) {
             color: Cesium.Color.YELLOW,
             outlineWidth: 3,
             outlineColor: Cesium.Color.YELLOW.withAlpha(0.4),
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY
         }
     })
 
 }
 
 //初始化线缓冲
-export function initPolylineBuffer() {
-    let points = [
-        [106.425203158107, 29.5694914480581],
-        [106.428808047023, 29.569230166027],
-        [106.431661917416, 29.5692674920729],
-        [106.434708906857, 29.5693048181049]
-    ];
+export function initPolylineBuffer(pos, value) {
+    let points = []
+    pos.forEach(item => {
+        let obj = cartesian3ToXyz(item, window.viewer)
+        points.push([obj.lng, obj.lat])
+    })
+
     let degreesArray = pointsToDegreesArray(points);
     addPolyline(Cesium.Cartesian3.fromDegreesArray(degreesArray));
 
     let polylineF = turf.lineString(points);
-    let buffered = turf.buffer(polylineF, 30, {units: 'meters'});
+    let buffered = turf.buffer(polylineF, Number(value), {units: 'meters'});
     let coordinates = buffered.geometry.coordinates;
     points = coordinates[0];
     degreesArray = pointsToDegreesArray(points);
@@ -56,21 +61,19 @@ function addPolyline(positions) {
 }
 
 //初始化面缓冲
-export function initPolygonBuffer() {
-    let points = [
-        [106.438549830166, 29.5701073244566],
-        [106.440695597377, 29.5701073244566],
-        [106.440738512722, 29.5688755679036],
-        [106.438700033871, 29.5687262630581],
-        [106.438034846035, 29.5690248725284],
-        [106.438549830166, 29.5701073244566]
-    ];
+export function initPolygonBuffer(pos, value) {
+    let points = []
+    pos.forEach(item => {
+        let obj = cartesian3ToXyz(item, window.viewer)
+        points.push([obj.lng, obj.lat])
+    })
+    points.push(points[0])
 
     let degreesArray = pointsToDegreesArray(points);
     addPolygon(Cesium.Cartesian3.fromDegreesArray(degreesArray));
 
     let polygonF = turf.polygon([points]);
-    let buffered = turf.buffer(polygonF, 60, {units: 'meters'});
+    let buffered = turf.buffer(polygonF, Number(value), {units: 'meters'});
     let coordinates = buffered.geometry.coordinates;
     points = coordinates[0];
     degreesArray = pointsToDegreesArray(points);
@@ -102,7 +105,14 @@ function addBufferPolyogn(positions) {
             classificationType: Cesium.ClassificationType.BOTH
         },
     })
-    window.viewer.flyTo(et)
+    allBuffer.push(et)
+    // window.viewer.flyTo(et)
+}
+
+function clearAllBuffer(){
+    allBuffer.forEach(item => {
+        window.viewer.entities.remove(item)
+    })
 }
 
 //格式转换
@@ -118,6 +128,7 @@ function pointsToDegreesArray(points) {
 export default {
     initPolylineBuffer,
     initPointBuffer,
-    initPolygonBuffer
+    initPolygonBuffer,
+    clearAllBuffer
 }
 

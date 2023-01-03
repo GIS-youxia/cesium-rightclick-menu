@@ -70,6 +70,25 @@
       </div>
     </div>
 
+    <el-dialog title="缓冲区设置" :visible.sync="dialogFormVisible" :width="'25%'">
+      <el-form :model="form" label-width="120px">
+        <el-form-item label="缓冲区类型">
+          <el-radio-group v-model="form.type">
+            <el-radio label="点"></el-radio>
+            <el-radio label="线"></el-radio>
+            <el-radio label="面"></el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="缓冲区范围">
+          <el-input v-model="form.value" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="startAsBuffer">确 定</el-button>
+      </div>
+    </el-dialog>
+
     <!--    <dk-info-->
     <!--      v-if="dkInfoDialogShow"-->
     <!--      :properties-obj="propertiesObj"-->
@@ -158,6 +177,12 @@ export default {
 
   data() {
     return {
+      form: {
+        type: '',
+        value: ''
+      },
+      dialogFormVisible: false,
+      formLabelWidth: '120px',
       alertMenuState: false,
       alertMenuStyle: {
         left: 0,
@@ -838,7 +863,59 @@ export default {
       }
     },
     initBufferAnalysis() {
-      initPointBuffer()
+      this.dialogFormVisible = true
+    },
+    startAsBuffer() {
+      switch (this.form.type) {
+        case "点":
+          this.isEditing = true
+          this.initEntityDraw()
+          this.drawActivate('Point')
+          this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
+            let point = cartesian3ToXyz(positions[0], window.viewer)
+            initPointBuffer(point, this.form.value)
+            // addLabelText(result, 'Point', value)
+            // this.markersArr.push(result) // 存一下方便删除
+            this.isEditing = false
+          })
+          this.entityDraw.CancelEvent.addEventListener(() => {
+            this.isEditing = false
+          })
+          break;
+        case "线":
+          this.isEditing = true
+          this.initEntityDraw()
+          this.drawActivate('Polyline')
+          this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
+            initPolylineBuffer(positions, this.form.value)
+            // addLabelText(result, 'Polyline', value)
+            // this.markersArr.push(result)
+            this.isEditing = false
+
+          })
+          this.entityDraw.CancelEvent.addEventListener(() => {
+            this.isEditing = false
+          })
+          break;
+        case "面":
+          this.isEditing = true
+          this.initEntityDraw()
+          this.drawActivate('Polygon')
+          this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
+            result.remove()
+            initPolygonBuffer(positions, this.form.value)
+            this.isEditing = false
+          })
+          this.entityDraw.CancelEvent.addEventListener(() => {
+            this.isEditing = false
+          })
+          break;
+      }
+      this.form = {
+        type: '',
+        value: ''
+      }
+      this.dialogFormVisible = false
     },
     createPolygon(points) {
       //primitive方式创建.可以制作出水波纹效果。adapCoordi
