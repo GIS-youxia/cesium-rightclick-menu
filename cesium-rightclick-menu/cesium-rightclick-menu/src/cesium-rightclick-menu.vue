@@ -117,7 +117,8 @@ import searchRoute from "./lib/LJFX"
 import {
   initPolylineBuffer,
   initPointBuffer,
-  initPolygonBuffer
+  initPolygonBuffer,
+  clearAllBuffer
 } from "./lib/Buffer"
 
 let positionEntity = []
@@ -181,6 +182,7 @@ export default {
         type: '',
         value: ''
       },
+      isBuffering: false,
       dialogFormVisible: false,
       formLabelWidth: '120px',
       alertMenuState: false,
@@ -235,14 +237,14 @@ export default {
             },
             {
               label: '最短路径分析',
-              icon: 'icon-yanmeiguocheng',
+              icon: 'icon-lujingfenxi',
               handler: 'initRouteAnalysis',
               isSwitch: true,
               active: false
             },
             {
               label: '缓冲区分析',
-              icon: 'icon-yanmeiguocheng',
+              icon: 'icon-hcq',
               handler: 'initBufferAnalysis',
               isSwitch: true,
               active: false
@@ -863,15 +865,22 @@ export default {
       }
     },
     initBufferAnalysis() {
-      this.dialogFormVisible = true
+      if (this.isBuffering) {
+        clearAllBuffer()
+        this.isBuffering = false
+      } else {
+        this.dialogFormVisible = true
+      }
     },
     startAsBuffer() {
+      this.isBuffering = true
       switch (this.form.type) {
         case "点":
           this.isEditing = true
           this.initEntityDraw()
           this.drawActivate('Point')
           this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
+            result.remove()
             let point = cartesian3ToXyz(positions[0], window.viewer)
             initPointBuffer(point, this.form.value)
             // addLabelText(result, 'Point', value)
@@ -887,6 +896,7 @@ export default {
           this.initEntityDraw()
           this.drawActivate('Polyline')
           this.entityDraw.DrawEndEvent.addEventListener((result, positions) => {
+            result.remove()
             initPolylineBuffer(positions, this.form.value)
             // addLabelText(result, 'Polyline', value)
             // this.markersArr.push(result)
@@ -911,10 +921,10 @@ export default {
           })
           break;
       }
-      this.form = {
-        type: '',
-        value: ''
-      }
+      // this.form = {
+      //   type: '',
+      //   value: ''
+      // }
       this.dialogFormVisible = false
     },
     createPolygon(points) {

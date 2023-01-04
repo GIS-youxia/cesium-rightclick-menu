@@ -6,6 +6,20 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "1370251",
+      "name": "地图-缓冲区分析",
+      "font_class": "hcq",
+      "unicode": "e62b",
+      "unicode_decimal": 58923
+    },
+    {
+      "icon_id": "5650907",
+      "name": "路径分析",
+      "font_class": "lujingfenxi",
+      "unicode": "e62c",
+      "unicode_decimal": 58924
+    },
+    {
       "icon_id": "11372655",
       "name": "地图",
       "font_class": "ditu",

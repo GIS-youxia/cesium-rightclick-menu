@@ -1,11 +1,10 @@
-//初始化点缓冲
 import {cartesian3ToXyz} from "../../utils/common_cesium";
-import {clear} from "core-js/internals/task";
+
 let allBuffer = []
+
 export function initPointBuffer(p, value) {
     let point = [p.lng, p.lat];
     addPoint(point);
-
     let pointF = turf.point(point);
     let buffered = turf.buffer(pointF, Number(value), {units: 'meters'});
     let coordinates = buffered.geometry.coordinates;
@@ -16,7 +15,7 @@ export function initPointBuffer(p, value) {
 
 //添加点
 function addPoint(point) {
-    window.viewer.entities.add({
+    let et = window.viewer.entities.add({
         position: Cesium.Cartesian3.fromDegrees(point[0], point[1], 0),
         point: {
             pixelSize: 10,
@@ -27,7 +26,7 @@ function addPoint(point) {
             disableDepthTestDistance: Number.POSITIVE_INFINITY
         }
     })
-
+    allBuffer.push(et)
 }
 
 //初始化线缓冲
@@ -51,13 +50,14 @@ export function initPolylineBuffer(pos, value) {
 
 //添加线
 function addPolyline(positions) {
-    window.viewer.entities.add({
+    let et = window.viewer.entities.add({
         polyline: {
             positions: positions,
             width: 2,
             material: Cesium.Color.YELLOW,
         }
     })
+    allBuffer.push(et)
 }
 
 //初始化面缓冲
@@ -82,7 +82,7 @@ export function initPolygonBuffer(pos, value) {
 
 //添加面
 function addPolygon(positions) {
-    window.viewer.entities.add({
+    let et = window.viewer.entities.add({
         polygon: {
             hierarchy: new Cesium.PolygonHierarchy(positions),
             material: Cesium.Color.YELLOW.withAlpha(0.6),
@@ -93,7 +93,8 @@ function addPolygon(positions) {
             width: 2,
             material: Cesium.Color.YELLOW.withAlpha(0.4),
         }
-    });
+    })
+    allBuffer.push(et)
 }
 
 //添加缓冲面
@@ -109,7 +110,7 @@ function addBufferPolyogn(positions) {
     // window.viewer.flyTo(et)
 }
 
-function clearAllBuffer(){
+export function clearAllBuffer() {
     allBuffer.forEach(item => {
         window.viewer.entities.remove(item)
     })
