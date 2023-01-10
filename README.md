@@ -1,4 +1,5 @@
 ## About
+
 [Github地址](https://github.com/Weiwong1996/cesium-rightclick-menu.git)
 
 <strong>Contact me on WeChat：<span style="color:aqua">_weiwong</span></strong>
@@ -11,6 +12,7 @@
       menuList: [
         {
           label: '查看坐标',
+          icon: 'icon-chakanzuobiao',
           children: [
             {label: '选点', icon: 'icon-ditu', handler: 'choosePos', isSwitch: true, active: false},
             {label: '清除', icon: 'icon-shanchu', handler: 'clearPositions'}
@@ -27,11 +29,9 @@
           label: '视角切换', icon: 'icon-yanjing_xianshi',
           children: [
             {label: '地下开挖', icon: 'icon-xiayi', handler: 'initExcavate', isSwitch: true, active: false},
-            {
-              label: '环绕飞行', ...
-            },
-            {label: '第一视角', ...},
-            {label: '键盘漫游', ...}
+            {label: '环绕飞行', icon: 'icon-icon-feixingmanyou', handler: 'initFlyAround', isSwitch: true, active: false },
+            {label: '第一视角', icon: 'icon-xingren', handler: 'initPeopleView', isSwitch: true, active: false},
+            {label: '键盘漫游', icon: 'icon-jianpan', handler: 'initKeyboardTour', isSwitch: true, active: false}
           ]
         },
         {
@@ -40,9 +40,9 @@
             {label: '地形', icon: 'icon-yuanjing', handler: 'initTerrain', isSwitch: true, active: false},
             {label: '限高分析', icon: 'icon-jianzhu', handler: 'initLimitHeight', isSwitch: true, active: false},
             // {label: '填挖方分析', icon: 'icon-tianwafangfenxi', isSwitch: true, active: false},
-            {
-              label: '淹没分析', ...
-            }
+            {label: '淹没分析', icon: 'icon-yanmeiguocheng', handler: 'initFloodAnalysis', isSwitch: true, active: false },
+            {label: '最短路径分析', icon: 'icon-lujingfenxi', handler: 'initRouteAnalysis', isSwitch: true, active: false },
+            {label: '缓冲区分析', icon: 'icon-hcq', handler: 'initBufferAnalysis', isSwitch: true,active: false}
           ]
         }, {
           label: '图上量算', icon: 'icon-celiang',
@@ -76,37 +76,26 @@
       ]
 ```
 
-## 目录结构描述
-
-    ├── imgs   // 图片图标等
-    ├── js   // 图片图标等
-    |   |── cesium_tools.js // cesium js库
-    ├── lib   // 包含各版本的lib文件夹
-    ├── utils // 工具及通用函数
-    ├── CommonMapComp.vue      // 主菜单文件，包含三维地图的创建
-    ...
-    ├── ReadMe.md           // 帮助文档
-
 ## 引入方法
 
-```javascript
+```html
 1. npm i cesium-rightclick-menu
 ```
+
 ``` javascript
 2. 在main.js内引入
     import cesiumRightclickMenu from 'cesium-rightclick-menu'
     Vue.use(cesiumRightclickMenu)
 ```
 
+``` javascript
+3. 在index.html内引入
+    <link rel="stylesheet" href="https://at.alicdn.com/t/c/font_3778628_tci473ef9mg.css">
+```
+
 ```html
 3. 将CommonMapComp.vue作为组件引入到所需vue文件，及可创建一个包含右键功能菜单的三位地图。
-
-    <cesium-rightclick-menu
-            style="width: 100%; height: 100%"
-            :to-center="toCenter"
-            :load3d-tiles="load3dTiles"
-            :tile-set-url="tileSetUrl"
-    ></cesium-rightclick-menu>
+   <cesium-rightclick-menu></cesium-rightclick-menu>
 ```
 
 

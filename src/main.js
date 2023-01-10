@@ -8,8 +8,6 @@ Vue.config.productionTip = false
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import less from 'less'
-import '../cesium-rightclick-menu/cesium-rightclick-menu/src/icons/iconfont.css'
-import '../cesium-rightclick-menu/cesium-rightclick-menu/src/icons/iconfont.js'
 import axios from 'axios'
 Vue.prototype.$axios = axios
 

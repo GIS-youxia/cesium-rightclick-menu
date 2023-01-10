@@ -40,32 +40,14 @@
         </div>
       </div>
     </div>
-
-    <div class="height__as" v-show="limitHeightShow">
+    <div class="height__as" v-show="limitHeightShow" v-drag title="按住鼠标左键可进行拖拽">
       <div class="h__content">
         <div style="padding-right: 10px">
           高度:
         </div>
-        <div>
+        <div v-stop-drag>
           <el-slider v-model="height" :show-tooltip="true" @input="valueChange" :min="1" :step="0.5"
                      :max="1000"></el-slider>
-        </div>
-      </div>
-    </div>
-
-    <FcDialog :properties="properties" v-if="properties" class="fc_dialog"></FcDialog>
-
-    <div v-if="delDialogShow" class="draw_dialog">
-      <div class="close_icon" @click="delDialogShow = false"></div>
-      <div class="outer_box">
-        <div class="inner_box">
-          <div class="content">
-            确定删除？
-          </div>
-          <div style="display: flex;justify-content: space-around;">
-            <div class="confirm_btn" @click="onCancel"><span>取消</span></div>
-            <div class="confirm_btn" @click="onDelete"><span>确定</span></div>
-          </div>
         </div>
       </div>
     </div>
@@ -80,7 +62,9 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="缓冲区范围">
-          <el-input v-model="form.value" autocomplete="off"></el-input>
+          <el-input v-model="form.value" autocomplete="off" placeholder="请输入数字">
+            <template slot="append">米</template>
+          </el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -88,6 +72,24 @@
         <el-button type="primary" @click="startAsBuffer">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!--    <FcDialog :properties="properties" v-if="properties" class="fc_dialog"></FcDialog>-->
+
+    <!--    <div v-if="delDialogShow" class="draw_dialog">-->
+    <!--      <div class="close_icon" @click="delDialogShow = false"></div>-->
+    <!--      <div class="outer_box">-->
+    <!--        <div class="inner_box">-->
+    <!--          <div class="content">-->
+    <!--            确定删除？-->
+    <!--          </div>-->
+    <!--          <div style="display: flex;justify-content: space-around;">-->
+    <!--            <div class="confirm_btn" @click="onCancel"><span>取消</span></div>-->
+    <!--            <div class="confirm_btn" @click="onDelete"><span>确定</span></div>-->
+    <!--          </div>-->
+    <!--        </div>-->
+    <!--      </div>-->
+    <!--    </div>-->
+
 
     <!--    <dk-info-->
     <!--      v-if="dkInfoDialogShow"-->
@@ -102,30 +104,59 @@
 </template>
 
 <script>
-import {
-  cartesian2ToXyz,
-  sceneToFile,
-  cartesian3ToXyz,
-  addLabelText
-} from "./utils/common_cesium"
+import {addLabelText, cartesian2ToXyz, cartesian3ToXyz, sceneToFile} from "./utils/common_cesium"
 import {disPlayPositionCtrl} from "./utils/common_tools"
 import EntityDraw from "./lib/LabelPlotting/EntityDraw"
 import MeasureTools from "./utils/measure"
-import * as DTH from "./lib/DTH/DTH"
-import FcDialog from "./FcDialog"
+// import * as DTH from "./lib/DTH/DTH"
+// import FcDialog from "./FcDialog"
 import searchRoute from "./lib/LJFX"
-import {
-  initPolylineBuffer,
-  initPointBuffer,
-  initPolygonBuffer,
-  clearAllBuffer
-} from "./lib/Buffer"
+import {clearAllBuffer, initPointBuffer, initPolygonBuffer, initPolylineBuffer} from "./lib/Buffer"
 
 let positionEntity = []
 export default {
   name: "cesium-rightclick-menu",
   components: {
-    FcDialog: FcDialog,
+    // FcDialog: FcDialog,
+  },
+
+  directives: {
+    drag: {
+      inserted(el) {
+        let oDiv = el; //当前元素
+        //禁止选择网页上的文字
+        document.onselectstart = function () {
+          return false;
+        };
+        oDiv.onmousedown = function (e) {
+          //鼠标按下，计算当前元素距离可视区的距离
+          let disX = e.clientX - oDiv.offsetLeft;
+          let disY = e.clientY - oDiv.offsetTop;
+          document.onmousemove = function (e) {
+            //通过事件委托，计算移动的距离
+            let l = e.clientX - disX;
+            let t = e.clientY - disY;
+            //移动当前元素
+            oDiv.style.left = l + "px";
+            oDiv.style.top = t + "px";
+          }
+          document.onmouseup = function (e) {
+            document.onmousemove = null;
+            document.onmouseup = null;
+          };
+          //return false不加的话可能导致黏连，就是拖到一个地方时div粘在鼠标上不下来，相当于onmouseup失效
+          return false;
+        };
+      }
+    },
+    /*阻止拖拽*/
+    stopDrag: {
+      inserted: function (el) {
+        el.onmousedown = function (e) {
+          e.stopPropagation()
+        }
+      }
+    }
   },
 
   /**
@@ -337,18 +368,18 @@ export default {
           }
         },
         // 提供一个默认图片避免加载cesiumendpoint接口
-        // imageryProvider: new Cesium.SingleTileImageryProvider({
-        //   url: require('./imgs/img.png'),
-        // })
+        imageryProvider: new Cesium.SingleTileImageryProvider({
+          url: 'http://120.27.230.6/tjch/logo/logo1.png',
+        })
       }
-      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
+      // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
       let viewer = new Cesium.Viewer('map3d', viewerOption)
       viewer._cesiumWidget._creditContainer.style.display = "none"// 隐藏版权
       viewer.scene.globe.depthTestAgainstTerrain = true
 
       //线下影像
       const tms = new Cesium.UrlTemplateImageryProvider({
-        url: Cesium.buildModuleUrl('http://120.27.230.6/tdt_yx') + '/{z}/{x}/{reverseY}.jpg',
+        url: Cesium.buildModuleUrl('http://120.27.230.6/tdt_yx/{z}/{x}/{reverseY}.jpg'),
         tilingScheme: new Cesium.GeographicTilingScheme(),
         maximumLevel: 19
       })
@@ -383,7 +414,7 @@ export default {
             pickedFeature.id.polygon.material = Cesium.Color.AQUA.withAlpha(0.5)
             that.highlightFace = pickedFeature.id.polygon
 
-            that.delDialogShow = true
+            // that.delDialogShow = true
           }
         } else {
           // 获取右键点击时，菜单栏出现的位置
@@ -443,14 +474,14 @@ export default {
     //     this.highlightFace.material = this.highlightFace.material0
     //   }
     // },
-    onCancel() {
-      this.delDialogShow = false
-    },
-    onDelete() {
-      //TODO
-      window.viewer.entities.remove(this.activeEntity)
-      this.delDialogShow = false
-    },
+    // onCancel() {
+    //   this.delDialogShow = false
+    // },
+    // onDelete() {
+    //   //TODO
+    //   window.viewer.entities.remove(this.activeEntity)
+    //   this.delDialogShow = false
+    // },
     showOrHiddenRightClickMenu(state) {
       this.alertMenuState = state
     },
@@ -506,9 +537,9 @@ export default {
     },
     addSplitLayer() {
       let layer1 = new Cesium.UrlTemplateImageryProvider({
-        url: "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
-        minimumLevel: 1,
-        maximumLevel: 18,
+        url: Cesium.buildModuleUrl('http://120.27.230.6/tdt_dt/{z}/{x}/{reverseY}.jpg'),
+        tilingScheme: new Cesium.GeographicTilingScheme(),
+        maximumLevel: 19
       })
       if (this.sliderShow) {
         this.splitHandler.destroy()
@@ -748,7 +779,7 @@ export default {
         })
       }
     },
-    valueChange() {
+    valueChange(e) {
       this.limitHeight && this.limitHeight.setHeight(this.height)
     },
     initLimitHeight() {
@@ -1181,85 +1212,85 @@ export default {
       this.entityDraw.activate(type)
       // this.terrainExcavate.clear()
     },
-    initDthFd() {
-      // 按栋进行单体化
-      this.fdDTH = new DTH.Fd(window.viewer, {
-        fdDataServerBaseUrl: "http://120.27.230.6:8080/geoserver/py/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=py%3Axssq&maxFeatures=5000&outputFormat=application%2Fjson"
-      })
-
-      this.fdDTH.BuildingSelectedEvent.addEventListener((properties, position, type, fid, isDelete = false) => {
-        // TODO 分栋完成后的操作
-      })
-      this.fdDTH.activate()
-    },
-    initDthFc() {
-      let fcDTH = new DTH.Fc(window.viewer, {
-        fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=5000&outputFormat=application%2Fjson"
-      })
-      fcDTH.FloorSelectedEvent.addEventListener((feature) => {
-        if (feature) {
-          this.properties = feature.properties
-        } else {
-          this.properties = null
-        }
-      })
-
-      fcDTH.activate()
-    },
-    initDthFh() {
-      let fhDTH = new DTH.Fh(window.viewer, {
-        fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=50&outputFormat=application%2Fjson",
-        //geoserver数据服务的地址 分户数据地址 分层数据中的楼栋编号和分户数据中的楼编号一致
-        fhDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afh_offset&maxFeatures=50&outputFormat=application%2Fjson"
-      })
-      fhDTH.HouseSelectedEvent.addEventListener((feature) => {
-        if (feature) {
-          this.properties = feature.properties
-        } else {
-          this.properties = null
-        }
-      })
-
-      fhDTH.activate()
-    },
-    addVideo() {
-      let position = Cesium.Cartesian3.fromDegrees(120.3008555978398, 30.406375251999187, 10)
-      let et = window.viewer.entities.add({
-        position: position,
-        point: {
-          pixelSize: 10,
-          color: Cesium.Color.YELLOW
-        }
-      })
-      window.viewer.zoomTo(et)
-      const videoElement = document.getElementById("myVideo")
-
-      // 参考 https://www.freesion.com/article/83151307019/
-      // 时钟同步
-      let synchronizer = new Cesium.VideoSynchronizer({
-        clock: viewer.clock,
-        element: videoElement
-      })
-      window.viewer.clock.shouldAnimate = true
-      videoElement.style.display = 'none'
-      this.videoPlane = new xt3d.VideoPlugin.VideoPlane(window.viewer, position, {
-        videoElement: videoElement,
-        rotation: {
-          heading: 90,
-          pitch: 80,
-          roll: 0
-        },
-        near: 0,
-        far: 30, //距离
-        fov: 29, //张角
-        aspectRatio: 1,
-        stRotation: 301,
-        debugFrustum: true //是否显示投影线
-      })
-    },
-    closeVideo() {
-      this.videoPlane.remove()
-    }
+    // initDthFd() {
+    //   // 按栋进行单体化
+    //   this.fdDTH = new DTH.Fd(window.viewer, {
+    //     fdDataServerBaseUrl: "http://120.27.230.6:8080/geoserver/py/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=py%3Axssq&maxFeatures=5000&outputFormat=application%2Fjson"
+    //   })
+    //
+    //   this.fdDTH.BuildingSelectedEvent.addEventListener((properties, position, type, fid, isDelete = false) => {
+    //     // TODO 分栋完成后的操作
+    //   })
+    //   this.fdDTH.activate()
+    // },
+    // initDthFc() {
+    //   let fcDTH = new DTH.Fc(window.viewer, {
+    //     fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=5000&outputFormat=application%2Fjson"
+    //   })
+    //   fcDTH.FloorSelectedEvent.addEventListener((feature) => {
+    //     if (feature) {
+    //       this.properties = feature.properties
+    //     } else {
+    //       this.properties = null
+    //     }
+    //   })
+    //
+    //   fcDTH.activate()
+    // },
+    // initDthFh() {
+    //   let fhDTH = new DTH.Fh(window.viewer, {
+    //     fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=50&outputFormat=application%2Fjson",
+    //     //geoserver数据服务的地址 分户数据地址 分层数据中的楼栋编号和分户数据中的楼编号一致
+    //     fhDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afh_offset&maxFeatures=50&outputFormat=application%2Fjson"
+    //   })
+    //   fhDTH.HouseSelectedEvent.addEventListener((feature) => {
+    //     if (feature) {
+    //       this.properties = feature.properties
+    //     } else {
+    //       this.properties = null
+    //     }
+    //   })
+    //
+    //   fhDTH.activate()
+    // },
+    // addVideo() {
+    //   let position = Cesium.Cartesian3.fromDegrees(120.3008555978398, 30.406375251999187, 10)
+    //   let et = window.viewer.entities.add({
+    //     position: position,
+    //     point: {
+    //       pixelSize: 10,
+    //       color: Cesium.Color.YELLOW
+    //     }
+    //   })
+    //   window.viewer.zoomTo(et)
+    //   const videoElement = document.getElementById("myVideo")
+    //
+    //   // 参考 https://www.freesion.com/article/83151307019/
+    //   // 时钟同步
+    //   let synchronizer = new Cesium.VideoSynchronizer({
+    //     clock: viewer.clock,
+    //     element: videoElement
+    //   })
+    //   window.viewer.clock.shouldAnimate = true
+    //   videoElement.style.display = 'none'
+    //   this.videoPlane = new xt3d.VideoPlugin.VideoPlane(window.viewer, position, {
+    //     videoElement: videoElement,
+    //     rotation: {
+    //       heading: 90,
+    //       pitch: 80,
+    //       roll: 0
+    //     },
+    //     near: 0,
+    //     far: 30, //距离
+    //     fov: 29, //张角
+    //     aspectRatio: 1,
+    //     stRotation: 301,
+    //     debugFrustum: true //是否显示投影线
+    //   })
+    // },
+    // closeVideo() {
+    //   this.videoPlane.remove()
+    // }
   },
   mounted() {
     this.$nextTick(() => {
@@ -1357,8 +1388,8 @@ export default {
 
   .height__as {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 20%;
+    left: 20px;
     background: #081A26;
     border: 1px solid rgba(53, 123, 181, 0.6);
     width: 200px;
