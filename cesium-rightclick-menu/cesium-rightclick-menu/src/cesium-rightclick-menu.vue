@@ -204,7 +204,25 @@ export default {
     showDkInfo: {
       type: Boolean,
       default: () => false
-    }
+    },
+    // 提供一个默认图片避免加载cesiumendpoint接口
+    imageryProvider: '',
+    // 影像图地址
+    imageMapUrl: '',
+    // 定位图标
+    locateImageUrl: '',
+    // 地图地址
+    mapUrl: '',
+    // 开挖底图
+    bottomImage: '',
+    // 开挖侧边图
+    sideImage: '',
+    // 汽车模型
+    carModel: '',
+    // 地图高程（地形）
+    terrainProviderUrl: '',
+    // 淹没分析图片
+    floodImg: ''
   },
 
   data() {
@@ -369,7 +387,7 @@ export default {
         },
         // 提供一个默认图片避免加载cesiumendpoint接口
         imageryProvider: new Cesium.SingleTileImageryProvider({
-          url: 'http://120.27.230.6/tjch/logo/logo1.png',
+          url: this.imageryProvider,
         })
       }
       // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
@@ -379,7 +397,7 @@ export default {
 
       //线下影像
       const tms = new Cesium.UrlTemplateImageryProvider({
-        url: Cesium.buildModuleUrl('http://120.27.230.6/tdt_yx/{z}/{x}/{reverseY}.jpg'),
+        url: Cesium.buildModuleUrl(this.imageMapUrl),
         tilingScheme: new Cesium.GeographicTilingScheme(),
         maximumLevel: 19
       })
@@ -512,7 +530,7 @@ export default {
       let et = new Cesium.Entity({
         position: Cesium.Cartesian3.fromDegrees(position.lng, position.lat),
         billboard: {
-          image: "http://120.27.230.6/tjch/cesium/resource/img/locate.png",
+          image: this.locateImageUrl,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM//贴地属性
         },
       })
@@ -537,7 +555,7 @@ export default {
     },
     addSplitLayer() {
       let layer1 = new Cesium.UrlTemplateImageryProvider({
-        url: Cesium.buildModuleUrl('http://120.27.230.6/tdt_dt/{z}/{x}/{reverseY}.jpg'),
+        url: Cesium.buildModuleUrl(this.mapUrl),
         tilingScheme: new Cesium.GeographicTilingScheme(),
         maximumLevel: 19
       })
@@ -549,16 +567,9 @@ export default {
       } else {
         this.sliderShow = true
         this.$nextTick(() => {
-          // const layer2 = new Cesium.UrlTemplateImageryProvider({
-          //   url: "Cesium.buildModuleUrl('http://120.27.230.6/tdt_yx') + '/{z}/{x}/{reverseY}.jpg'",
-          //   minimumLevel: 1,
-          //   maximumLevel: 18,
-          // })
           const layers = window.viewer.imageryLayers
           const earthAtRight = layers.addImageryProvider(layer1)
           this.earthAtRightLayer = earthAtRight
-          // const earthAtLeft = layers.addImageryProvider(layer2)
-          // earthAtLeft.splitDirection = Cesium.ImagerySplitDirection.LEFT
           earthAtRight.splitDirection = Cesium.ImagerySplitDirection.RIGHT
 
           const slider = document.getElementById("slider")
@@ -627,8 +638,8 @@ export default {
           }).then(({value}) => {
             this.terrainExcavate.add(positions, {
               excavateDepth: value,
-              bottomImage: 'http://120.27.230.6/tjch/cesium/resource/img/kaiwa_bottom.png',
-              sideImage: 'http://120.27.230.6/tjch/cesium/resource/img/kaiwa_side.png'
+              bottomImage: this.bottomImage,
+              sideImage: this.sideImage
             })
             this.isEditing = false
           }).catch(() => {
@@ -726,7 +737,7 @@ export default {
           //创建漫游对象
           this.roamObj = new xt3d.TrackRoam.Roam(window.viewer, positions, {
             speed: 10,
-            modelUrl: 'http://120.27.230.6/tjch/cesium/resource/img/CesiumMilkTruck.glb',
+            modelUrl: this.carModel,
             scale: 1, // 大小
             role: 2
           })
@@ -757,7 +768,7 @@ export default {
           note.close()
           result.remove()
           this.keyboardModel = new xt3d.KeyboardDominate.KeyboardModelExt(window.viewer, positions[0], {
-            modelUrl: "http://120.27.230.6/tjch/cesium/resource/img/CesiumMilkTruck.glb",
+            modelUrl: this.carModel,
             scale: 1,
             minimumPixelSize: 20,
             angle: 1, //转弯角度大小 越大转得越快
@@ -775,7 +786,7 @@ export default {
         viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider({})
       } else {
         window.viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-          url: "http://120.27.230.6/yhterrain",
+          url: this.terrainProviderUrl,
         })
       }
     },
@@ -980,7 +991,7 @@ export default {
               type: 'Water',
               uniforms: {
                 // blendColor: new Cesium.Color(0, 0, 1, 0.3),
-                normalMap: Cesium.buildModuleUrl('http://120.27.230.6/tjch/cesium/resource/img/flood.png'),
+                normalMap: Cesium.buildModuleUrl(this.floodImg),
                 //频率速度设置
                 frequency: 10000,
                 animationSpeed: 0.01,
