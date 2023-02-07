@@ -1,6 +1,6 @@
 {
   "name": "cesium-rightclick-menu",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "private": false,
   "description": "cesium地图右键弹出功能菜单",
   "main": "lib/landscape-components.umd.min.js",

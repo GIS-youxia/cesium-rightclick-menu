@@ -1,4 +1,3 @@
-
 /**
  * @name: common_cesium
  * @author: wangwei
@@ -8,7 +7,6 @@
  */
 
 import {dataURLtoBlob} from "./common_tools";
-// import colors from '../components/comprehensiveMap/colors.json'
 import Vue from "vue";
 
 /**
