@@ -11,7 +11,7 @@
     >
       <div class="level__one">
         <div v-for="(item, index) in menuList"
-             :key="index"
+             :key="item.label"
              :class="[activeIndex === index ? 'level__one__item active' : 'level__one__item']"
              @mouseover="handleHover(index)"
              :ref="`menuItem${index}`" @click="executionMethod(item.handler, undefined)">
@@ -24,7 +24,7 @@
           </div>
         </div>
       </div>
-      <div v-if="activeMenuList&&activeMenuList.length" class="level__two" :style="menu_level2Style">
+      <div v-if="activeMenuList&&activeMenuList.length" class="level__two" ref="menuLevel2" :style="menu_level2Style">
         <div v-for="(child, cIndex) in activeMenuList"
              :key="cIndex"
              :class="[activeSubIndex === cIndex ? 'level__two__item active' : 'level__two__item']"
@@ -73,30 +73,6 @@
       </div>
     </el-dialog>
 
-    <!--    <FcDialog :properties="properties" v-if="properties" class="fc_dialog"></FcDialog>-->
-
-    <!--    <div v-if="delDialogShow" class="draw_dialog">-->
-    <!--      <div class="close_icon" @click="delDialogShow = false"></div>-->
-    <!--      <div class="outer_box">-->
-    <!--        <div class="inner_box">-->
-    <!--          <div class="content">-->
-    <!--            确定删除？-->
-    <!--          </div>-->
-    <!--          <div style="display: flex;justify-content: space-around;">-->
-    <!--            <div class="confirm_btn" @click="onCancel"><span>取消</span></div>-->
-    <!--            <div class="confirm_btn" @click="onDelete"><span>确定</span></div>-->
-    <!--          </div>-->
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--    </div>-->
-
-
-    <!--    <dk-info-->
-    <!--      v-if="dkInfoDialogShow"-->
-    <!--      :properties-obj="propertiesObj"-->
-    <!--      @changeActiveEntityColor="changeActiveEntityColor(arguments)"-->
-    <!--      @close="handleDkInfoClose"-->
-    <!--    ></dk-info>-->
     <!--    <video id="myVideo" muted="" autoplay="" loop="" crossorigin="" controls="">-->
     <!--      <source src="../../static/lukou.mp4" type="video/mp4">-->
     <!--    </video>-->
@@ -108,45 +84,38 @@ import {addLabelText, cartesian2ToXyz, cartesian3ToXyz, sceneToFile} from "./uti
 import {disPlayPositionCtrl} from "./utils/common_tools"
 import EntityDraw from "./lib/LabelPlotting/EntityDraw"
 import MeasureTools from "./utils/measure"
-// import * as DTH from "./lib/DTH/DTH"
-// import FcDialog from "./FcDialog"
 import searchRoute from "./lib/LJFX"
 import {clearAllBuffer, initPointBuffer, initPolygonBuffer, initPolylineBuffer} from "./lib/Buffer"
 
 let positionEntity = []
 export default {
   name: "cesium-rightclick-menu",
-  components: {
-    // FcDialog: FcDialog,
-  },
 
   directives: {
     drag: {
       inserted(el) {
-        let oDiv = el; //当前元素
+        let oDiv = el
         //禁止选择网页上的文字
         document.onselectstart = function () {
-          return false;
-        };
+          return false
+        }
         oDiv.onmousedown = function (e) {
           //鼠标按下，计算当前元素距离可视区的距离
-          let disX = e.clientX - oDiv.offsetLeft;
-          let disY = e.clientY - oDiv.offsetTop;
+          let disX = e.clientX - oDiv.offsetLeft
+          let disY = e.clientY - oDiv.offsetTop
           document.onmousemove = function (e) {
-            //通过事件委托，计算移动的距离
-            let l = e.clientX - disX;
-            let t = e.clientY - disY;
-            //移动当前元素
-            oDiv.style.left = l + "px";
-            oDiv.style.top = t + "px";
+            let l = e.clientX - disX
+            let t = e.clientY - disY
+
+            oDiv.style.left = l + "px"
+            oDiv.style.top = t + "px"
           }
           document.onmouseup = function (e) {
-            document.onmousemove = null;
-            document.onmouseup = null;
-          };
-          //return false不加的话可能导致黏连，就是拖到一个地方时div粘在鼠标上不下来，相当于onmouseup失效
-          return false;
-        };
+            document.onmousemove = null
+            document.onmouseup = null
+          }
+          return false
+        }
       }
     },
     /*阻止拖拽*/
@@ -239,6 +208,7 @@ export default {
         left: 0,
         top: 0,
       },
+      rightClickPos: {},
       menuList: [
         {
           label: '查看坐标',
@@ -346,12 +316,8 @@ export default {
       mhTool: null,
       mdTool: null,
       markersArr: [],
-      properties: null,
       highlightFace: null,
-      delDialogShow: false,
       activeEntity: null,
-      // dkInfoDialogShow: false,
-      // propertiesObj: {},
       // videoPlane: null,
       isChoosePos: false
     }
@@ -390,7 +356,6 @@ export default {
           url: this.imageryProvider,
         })
       }
-      // Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWRhNjczZi1jODI2LTQzMTctYWM3Mi0yOTcwNjE4MmJhY2YiLCJpZCI6NzE0MzgsImlhdCI6MTYzOTk4MjEyMH0.RbSKlFOzNyLXNnFfq631lXEGMJzMYL0RzGhOUvnlZBY'
       let viewer = new Cesium.Viewer('map3d', viewerOption)
       viewer._cesiumWidget._creditContainer.style.display = "none"// 隐藏版权
       viewer.scene.globe.depthTestAgainstTerrain = true
@@ -431,20 +396,21 @@ export default {
             pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material
             pickedFeature.id.polygon.material = Cesium.Color.AQUA.withAlpha(0.5)
             that.highlightFace = pickedFeature.id.polygon
-
-            // that.delDialogShow = true
           }
         } else {
           // 获取右键点击时，菜单栏出现的位置
           if (!that.isEditing) {
-            that.alertMenuStyle = disPlayPositionCtrl(
-                click.position.x, // 屏幕坐标x
-                click.position.y, // 屏幕坐标y
-                that.$refs.alertMenu.clientWidth, // 菜单栏宽度
-                that.$refs.alertMenu.clientHeight // 菜单栏高度
-            )
-            // 显示右键菜单栏
-            that.showOrHiddenRightClickMenu(true)
+            // that.rightClickPos = click.position
+            that.$nextTick(()=> {
+              that.alertMenuStyle = disPlayPositionCtrl(
+                  click.position.x, // 屏幕坐标x
+                  click.position.y, // 屏幕坐标y
+                  that.$refs.alertMenu.clientWidth, // 菜单栏宽度
+                  that.$refs.alertMenu.clientHeight // 菜单栏高度
+              )
+              // 显示右键菜单栏
+              that.showOrHiddenRightClickMenu(true)
+            })
           }
         }
       }, Cesium.ScreenSpaceEventType.RIGHT_CLICK)
@@ -469,37 +435,11 @@ export default {
             pickedFeature.id.polygon.material0 = pickedFeature.id.polygon.material
             pickedFeature.id.polygon.material = Cesium.Color.AQUA
             this.highlightFace = pickedFeature.id.polygon
-            // this.showDkInfo && this.showDkInfos()
           }
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
     },
 
-    // showDkInfos() {
-    //   this.dkInfoDialogShow = true
-    //   let entity = this.activeEntity
-    //   this.propertiesObj = entity.propertiesObj
-    // },
-
-    // changeActiveEntityColor(args) {
-    //   let color = getColor(args[0])
-    //   this.activeEntity.polygon.material = Cesium.Color.fromCssColorString(color)
-    //   this.activeEntity.label = getLabelObj(args[1])
-    // },
-    // handleDkInfoClose() {
-    //   this.dkInfoDialogShow = false
-    //   if (this.highlightFace) {
-    //     this.highlightFace.material = this.highlightFace.material0
-    //   }
-    // },
-    // onCancel() {
-    //   this.delDialogShow = false
-    // },
-    // onDelete() {
-    //   //TODO
-    //   window.viewer.entities.remove(this.activeEntity)
-    //   this.delDialogShow = false
-    // },
     showOrHiddenRightClickMenu(state) {
       this.alertMenuState = state
     },
@@ -508,10 +448,20 @@ export default {
       this.activeSubIndex = 0
       let dom = this.$refs[`menuItem${index}`]
 
-      this.menu_level2Style = {
-        marginTop: dom[0].offsetTop + 'px'
-      }
+      // this.$nextTick(() => {
+      //   let clientWidth = document.documentElement.clientWidth;
+      //   let clientHeight = document.documentElement.clientHeight;
+      //   let totalHeight = this.$refs.menuLevel2.clientHeight + dom[0].offsetTop
+      //   if (totalHeight > clientHeight - this.rightClickPos.y) {
+      //
+      //   } else {
+      //
+      //   }
+      // })
 
+      this.menu_level2Style = {
+        marginTop: dom[0].offsetTop + 2 + 'px'
+      }
       this.activeMenuList = this.menuList[index].children
     },
     handleSubHover(index) {
@@ -861,7 +811,6 @@ export default {
       let entity = window.viewer.entities.add({
         id: "floodEntity",
         polygon: {
-          //hierarchy: Cesium.Cartesian3.fromDegreesArrayHeights(adapCoordi),
           hierarchy: positions,
           closeTop: true,
           closeBottom: true,
@@ -932,7 +881,7 @@ export default {
           this.entityDraw.CancelEvent.addEventListener(() => {
             this.isEditing = false
           })
-          break;
+          break
         case "线":
           this.isEditing = true
           this.initEntityDraw()
@@ -948,7 +897,7 @@ export default {
           this.entityDraw.CancelEvent.addEventListener(() => {
             this.isEditing = false
           })
-          break;
+          break
         case "面":
           this.isEditing = true
           this.initEntityDraw()
@@ -961,7 +910,7 @@ export default {
           this.entityDraw.CancelEvent.addEventListener(() => {
             this.isEditing = false
           })
-          break;
+          break
       }
       // this.form = {
       //   type: '',
@@ -1223,47 +1172,6 @@ export default {
       this.entityDraw.activate(type)
       // this.terrainExcavate.clear()
     },
-    // initDthFd() {
-    //   // 按栋进行单体化
-    //   this.fdDTH = new DTH.Fd(window.viewer, {
-    //     fdDataServerBaseUrl: "http://120.27.230.6:8080/geoserver/py/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=py%3Axssq&maxFeatures=5000&outputFormat=application%2Fjson"
-    //   })
-    //
-    //   this.fdDTH.BuildingSelectedEvent.addEventListener((properties, position, type, fid, isDelete = false) => {
-    //     // TODO 分栋完成后的操作
-    //   })
-    //   this.fdDTH.activate()
-    // },
-    // initDthFc() {
-    //   let fcDTH = new DTH.Fc(window.viewer, {
-    //     fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=5000&outputFormat=application%2Fjson"
-    //   })
-    //   fcDTH.FloorSelectedEvent.addEventListener((feature) => {
-    //     if (feature) {
-    //       this.properties = feature.properties
-    //     } else {
-    //       this.properties = null
-    //     }
-    //   })
-    //
-    //   fcDTH.activate()
-    // },
-    // initDthFh() {
-    //   let fhDTH = new DTH.Fh(window.viewer, {
-    //     fcDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afc_offset&maxFeatures=50&outputFormat=application%2Fjson",
-    //     //geoserver数据服务的地址 分户数据地址 分层数据中的楼栋编号和分户数据中的楼编号一致
-    //     fhDataServerBaseUrl: "http://42.192.134.169:8090/geoserver/xt3d/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=xt3d%3Afh_offset&maxFeatures=50&outputFormat=application%2Fjson"
-    //   })
-    //   fhDTH.HouseSelectedEvent.addEventListener((feature) => {
-    //     if (feature) {
-    //       this.properties = feature.properties
-    //     } else {
-    //       this.properties = null
-    //     }
-    //   })
-    //
-    //   fhDTH.activate()
-    // },
     // addVideo() {
     //   let position = Cesium.Cartesian3.fromDegrees(120.3008555978398, 30.406375251999187, 10)
     //   let et = window.viewer.entities.add({
@@ -1303,6 +1211,7 @@ export default {
     //   this.videoPlane.remove()
     // }
   },
+
   mounted() {
     this.$nextTick(() => {
       // 禁用右键
@@ -1325,6 +1234,7 @@ export default {
     this.initMeasure() // 测量工具
     this.initMarkerTool()
   },
+
   beforeDestroy() {
     window.viewer.entities.removeAll()
     window.viewer.imageryLayers.removeAll(true)
@@ -1342,7 +1252,7 @@ export default {
   .alertMenu {
     position: absolute;
     display: flex;
-    width: 320px;
+    //width: 320px;
     height: 250px;
     border-radius: 4px;
     z-index: 9999;
@@ -1350,7 +1260,7 @@ export default {
     .level__one {
       border: 1px solid rgba(53, 123, 181, 0.6);
       background: #081A26;
-      //width: 38%;
+      min-width: 120px;
       height: 100%;
       display: flex;
       flex-direction: column;
@@ -1362,22 +1272,22 @@ export default {
 
       .level__one__item {
         padding: 5px 0;
-        width: 100%;
         display: flex;
+        width: 100%;
       }
 
     }
 
     .active {
-      background-color: rgba(53, 123, 181, 0.6);
+      background-color: rgba(46, 152, 241, 0.6);
     }
 
     .level__two {
       border: 1px solid rgba(53, 123, 181, 0.6);
       background: #081A26;
-      margin-left: 2px;
+      margin-left: -3px;
       //width: 40%;
-      min-width: 40%;
+      min-width: 100px;
       display: flex;
       align-self: baseline;
       flex-direction: column;
@@ -1393,6 +1303,8 @@ export default {
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
+        white-space: nowrap;
       }
     }
   }
@@ -1411,17 +1323,6 @@ export default {
       align-items: center;
       color: white;
     }
-  }
-
-  .fc_dialog {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: #081A26;
-    border: 1px solid rgba(53, 123, 181, 0.6);
-    width: 200px;
-    padding: 10px;
-    color: white;
   }
 
   .el-slider {

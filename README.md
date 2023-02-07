@@ -82,20 +82,54 @@
 1. npm i cesium-rightclick-menu
 ```
 
-``` javascript
+```javascript
 2. 在main.js内引入
-    import cesiumRightclickMenu from 'cesium-rightclick-menu'
-    Vue.use(cesiumRightclickMenu)
+import cesiumRightclickMenu from 'cesium-rightclick-menu'
+
+Vue.use(cesiumRightclickMenu)
 ```
 
-``` javascript
-3. 在index.html内引入
+```html
+    3. 在index.html内引入
     <link rel="stylesheet" href="https://at.alicdn.com/t/c/font_3778628_tci473ef9mg.css">
 ```
 
 ```html
-3. 将CommonMapComp.vue作为组件引入到所需vue文件，及可创建一个包含右键功能菜单的三位地图。
-   <cesium-rightclick-menu></cesium-rightclick-menu>
+    4. 将CommonMapComp.vue作为组件引入到所需vue文件，及可创建一个包含右键功能菜单的三位地图。
+    <cesium-rightclick-menu
+            :imageryProvider="imageryProvider"
+            :imageMapUrl="imageMapUrl"
+            :locate-image-url="locateImageUrl"
+            :map-url="mapUrl"
+            :bottom-image="bottomImage"
+            :side-image="sideImage"
+            :car-model="carModel"
+            :terrain-provider-url="terrainProviderUrl"
+            :flood-img="floodImg"
+    >
+    </cesium-rightclick-menu>
+```
+## 参数说明
+```javascript
+
+    // 提供一个默认图片避免加载cesiumendpoint接口
+    imageryProvider: 'http://xxx.xxx.xxx.xxx/logo/logo1.png'
+    // 影像图地址
+    imageMapUrl: 'http://xxx.xxx.xxx.xxx/tdt_yx/{z}/{x}/{reverseY}.jpg'
+    // 定位图标
+    locateImageUrl: 'http://xxx.xxx.xxx.xxx/cesium/resource/img/locate.png'
+    // 地图地址
+    mapUrl: 'http://xxx.xxx.xxx.xxx/tdt_dt/{z}/{x}/{reverseY}.jpg'
+    // 开挖底图
+    bottomImage: 'http://xxx.xxx.xxx.xxx/cesium/resource/img/kaiwa_bottom.png'
+    // 开挖侧边图
+    sideImage: 'http://xxx.xxx.xxx.xxx/cesium/resource/img/kaiwa_side.png'
+    // 汽车模型
+    carModel: 'http://xxx.xxx.xxx.xxx/cesium/resource/img/CesiumMilkTruck.glb'
+    // 地图高程（地形）
+    terrainProviderUrl: 'http://xxx.xxx.xxx.xxx/yhterrain'
+    // 淹没分析图片
+    floodImg: 'http://xxx.xxx.xxx.xxx/cesium/resource/img/flood.png'
 ```
 
 
